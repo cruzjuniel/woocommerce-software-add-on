@@ -68,11 +68,11 @@ export class WooCommerceSoftwareAddOn {
 
     private async getRequest(request: string, args: { [key: string]: string | null }): Promise<object> {
         let requestPath: string = "/woocommerce/?wc-api=software-api"
-        requestPath += `?request=${request}`
+        requestPath += `&request=${request}`
 
         Object.keys(args).forEach(key => {
             if (args[key]) {
-                requestPath += `?${key}=${args[key]}`
+                requestPath += `&${key}=${args[key]}`
             }
         });
 
