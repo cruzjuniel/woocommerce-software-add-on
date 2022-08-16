@@ -1,5 +1,11 @@
-import https = require('https');
 
+import https = require('https');
+import {
+    WooCommerceSoftwareResult,
+    WooCommerceSoftwareCheckResult,
+    WooCommerceSoftwareCheckSuccess,
+    WooCommerceSoftwareCheckFailed
+} from "./types";
 
 export class WooCommerceSoftwareAddOn {
     hostname: string;
@@ -13,7 +19,7 @@ export class WooCommerceSoftwareAddOn {
     }
 
     // generate_key: https://woocommerce.com/document/software-add-on/#section-10
-    async generateKey(secret_key: string, order_id: string | null = null, version: string | null = null, key_prefix: string | null = null, activations: number = 1): Promise<object> {
+    async generateKey(secret_key: string, order_id: string | null = null, version: string | null = null, key_prefix: string | null = null, activations: number = 1): Promise<WooCommerceSoftwareResult>{
         return await this.getRequest("generate_key", {
             secret_key: secret_key,
             email: this.email,
@@ -26,7 +32,7 @@ export class WooCommerceSoftwareAddOn {
     }
 
     // activation: https://woocommerce.com/document/software-add-on/#section-11
-    async activateLicense(license_key: string, instance: string | null = null, platform: string | null = null, secret_key: string | null = null): Promise<object> {
+    async activateLicense(license_key: string, instance: string | null = null, platform: string | null = null, secret_key: string | null = null): Promise<WooCommerceSoftwareResult>{
         return await this.getRequest("activation", {
             email: this.email,
             license_key: license_key,
@@ -38,35 +44,52 @@ export class WooCommerceSoftwareAddOn {
     }
 
     // activation_reset: https://woocommerce.com/document/software-add-on/#section-12
-    async resetLicense(license_key: string): Promise<object> {
+    async resetLicense(license_key: string): Promise<WooCommerceSoftwareResult>{
         return await this.getRequest("activation_reset", {
             email: this.email,
             license_key: license_key,
-            product_id: this.product_id,
+            product_id: this.product_id
         });
     }
 
     // deactivation: https://woocommerce.com/document/software-add-on/#section-13
-    async deactivateLicense(license_key: string, instance: string | null = null, activation_id: string | null = null): Promise<object> {
+    async deactivateLicense(license_key: string, instance: string | null = null, activation_id: string | null = null): Promise<WooCommerceSoftwareResult>{
         return await this.getRequest("deactivation", {
             email: this.email,
             license_key: license_key,
             product_id: this.product_id,
             instance: instance,
-            activation_id: activation_id,
+            activation_id: activation_id
         });
     }
 
     // check: https://woocommerce.com/document/software-add-on/#section-14
-    async checkLicense(license_key: string): Promise<object> {
-        return await this.getRequest("check", {
+    async checkLicense(license_key: string, timestamp: string | number = 0, platform: string = ""): Promise<WooCommerceSoftwareResult>{
+        let result : WooCommerceSoftwareResult = await this.getRequest("check", {
             email: this.email,
             license_key: license_key,
-            product_id: this.product_id,
+            product_id: this.product_id
         });
+        if (result.success) {
+            let output : WooCommerceSoftwareCheckResult = (result.output as WooCommerceSoftwareCheckResult);
+            if (!output.success) {
+                result.success = false;
+                result.error = `Code ${(output as WooCommerceSoftwareCheckFailed).code}: ${(output as WooCommerceSoftwareCheckFailed).error}`;
+            } else {
+                if ((output as WooCommerceSoftwareCheckSuccess).activations.find(activation => {
+                    // if timestamp is 0 (no timestamp was provided), activation_time is ignored
+                    // if platform is empty string (no platform was provided), activation_platform is ignored
+                    return (timestamp == 0 || activation.activation_time == String(timestamp)) && (platform == "" || platform == activation.activation_platform);
+                }) === undefined) {
+                    result.success = false;
+                    result.error = `No matching timestamp '${timestamp}' and/or platform '${platform}'`;
+                }
+            }
+        }
+        return result;
     }
 
-    private async getRequest(request: string, args: { [key: string]: string | null }): Promise<object> {
+    private async getRequest(request: string, args: { [key: string]: string | null }): Promise<WooCommerceSoftwareResult>{
         let requestPath: string = "/woocommerce/?wc-api=software-api"
         requestPath += `&request=${request}`
 
@@ -76,7 +99,7 @@ export class WooCommerceSoftwareAddOn {
             }
         });
 
-        return await new Promise<object>(resolve => {
+        return await new Promise<WooCommerceSoftwareResult>(resolve => {
             https.get({
                 hostname: this.hostname,
                 path: requestPath
@@ -123,6 +146,8 @@ export class WooCommerceSoftwareAddOn {
                     resolve({
                         success: false,
                         code: res.statusCode,
+                        headers: res.headers,
+                        output: null,                        
                         error: `Status code is ${res.statusCode}`
                     });
 
@@ -132,6 +157,9 @@ export class WooCommerceSoftwareAddOn {
 
                 resolve({
                     success: false,
+                    code: 0,
+                    headers: null,
+                    output: null,                        
                     error: e
                 });
 
