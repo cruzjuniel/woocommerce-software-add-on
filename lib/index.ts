@@ -77,9 +77,9 @@ export class WooCommerceSoftwareAddOn {
                 result.error = `Code ${(output as WooCommerceSoftwareCheckFailed).code}: ${(output as WooCommerceSoftwareCheckFailed).error}`;
             } else {
                 if ((output as WooCommerceSoftwareCheckSuccess).activations.find(activation => {
-                    // if timestamp is 0 (no timestamp was provided), activation_time is ignored
+                    // if timestamp is 0 (no timestamp was provided), instance is ignored
                     // if platform is empty string (no platform was provided), activation_platform is ignored
-                    return (timestamp == 0 || activation.activation_time == String(timestamp)) && (platform == "" || platform == activation.activation_platform);
+                    return (timestamp == 0 || activation.instance == String(timestamp)) && (platform == "" || platform == activation.activation_platform);
                 }) === undefined) {
                     result.success = false;
                     result.error = `No matching timestamp '${timestamp}' and/or platform '${platform}'`;
