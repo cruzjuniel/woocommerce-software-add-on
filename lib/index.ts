@@ -4,7 +4,8 @@ import {
     WooCommerceSoftwareResult,
     WooCommerceSoftwareCheckResult,
     WooCommerceSoftwareCheckSuccess,
-    WooCommerceSoftwareCheckFailed
+    WooCommerceSoftwareCheckFailed,
+    WooCommerceSoftwareActivations
 } from "./types";
 
 async function getRequest(hostname: string, request: string, args: { [key: string]: string | null }): Promise<WooCommerceSoftwareResult> {
@@ -111,7 +112,11 @@ export async function checkLicense(hostname: string, product_id: string, email: 
             result.success = false;
             result.error = `Code ${(output as WooCommerceSoftwareCheckFailed).code}: ${(output as WooCommerceSoftwareCheckFailed).error}`;
         } else {
-            if ((output as WooCommerceSoftwareCheckSuccess).activations.find(activation => {
+            let activations: Array<WooCommerceSoftwareActivations> = (output as WooCommerceSoftwareCheckSuccess).activations;
+            if (activations.length == 0) {
+                result.success = false;
+                result.error = "Software key is not yet activated";
+            } else if (activations.find(activation => {
                 // if timestamp is 0 (no timestamp was provided), instance is ignored
                 // if platform is empty string (no platform was provided), activation_platform is ignored
                 return (timestamp == 0 || activation.instance == String(timestamp)) && (platform == "" || platform == activation.activation_platform);
