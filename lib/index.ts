@@ -9,14 +9,16 @@ import {
 } from "./types";
 
 async function getRequest(hostname: string, request: string, args: { [key: string]: string | null }): Promise<WooCommerceSoftwareResult> {
-    let requestPath: string = "/woocommerce/?wc-api=software-api"
-    requestPath += `&request=${request}`
+    let requestPath: string = "/woocommerce/?";
+    let searchParams: URLSearchParams = new URLSearchParams(`wc-api=software-api&request=${request}`);
 
     Object.keys(args).forEach(key => {
         if (args[key]) {
-            requestPath += `&${key}=${args[key]}`
+            searchParams.append(key, String(args[key]));
         }
     });
+
+    requestPath += searchParams.toString();
 
     return await new Promise<WooCommerceSoftwareResult>(resolve => {
         https.get({
