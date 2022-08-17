@@ -135,6 +135,19 @@ export class WooCommerceSoftwareAddOn {
         this.email = email;
     }
 
+    // generate_key: https://woocommerce.com/document/software-add-on/#section-10
+    async generateKey(secret_key: string, email: string | null = null, order_id: string | null = null, version: string | null = null, key_prefix: string | null = null, activations: number = 1): Promise<WooCommerceSoftwareResult> {
+        let _email: string | null = email != null ? email : this.email;
+        if (_email == null) return {
+            success: false,
+            code: undefined,
+            headers: null,
+            output: null,
+            error: "No email set"
+        }
+        return generateKey(this.hostname, this.product_id, _email, secret_key, order_id, version, key_prefix, activations);
+    }
+
     // activation: https://woocommerce.com/document/software-add-on/#section-11
     async activateLicense(license_key: string, instance: string | null = null, platform: string | null = null, secret_key: string | null = null): Promise<WooCommerceSoftwareResult> {
         if (this.email == null) return {
@@ -197,7 +210,7 @@ export class WooCommerceSoftwareAddOn {
             output: null,
             error: "No email set"
         }
-        return checkLicense(this.hostname, this.product_id, this.email, license_key, timestamp, platform);        
+        return checkLicense(this.hostname, this.product_id, this.email, license_key, timestamp, platform);
     }
 
     private async getRequest(request: string, args: { [key: string]: string | null }): Promise<WooCommerceSoftwareResult> {
