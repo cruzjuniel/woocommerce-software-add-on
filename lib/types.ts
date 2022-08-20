@@ -29,11 +29,37 @@ export interface WooCommerceSoftwareActivations {
 }
 
 export interface WooCommerceSoftwareCheckSuccess extends WooCommerceSoftwareCheckResult {
+    success: true,
     remaining: number,
     activations: Array<WooCommerceSoftwareActivations>
 }
 
 export interface WooCommerceSoftwareCheckFailed extends WooCommerceSoftwareCheckResult {
+    success: false,
     code: string,
     error: string
+}
+
+export interface WooCommerceSoftwareActivateResult {
+    activated: boolean,
+    timestamp: number,
+    sig: string
+}
+
+export interface WooCommerceSoftwareActivateSuccess extends WooCommerceSoftwareActivateResult {
+    activated: true,
+    instance: number,
+    message: string
+}
+
+export interface WooCommerceSoftwareActivateFailed extends WooCommerceSoftwareActivateResult {
+    activated: false,
+    code: string,
+    error: string
+}
+
+export interface WooCommerceSoftwareDeactivateResult {
+    reset: boolean,
+    timestamp: number,
+    sig: string
 }
