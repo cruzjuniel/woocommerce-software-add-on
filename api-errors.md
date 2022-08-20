@@ -1,6 +1,6 @@
-## Error codes
+## Known Error Codes
 
-These error codes are listed in the plugin source code. For more information about each, please contact the WooCommerce Software Add-on plugin developers or check their documentation.
+These error codes are found in the plugin source code. For more information about each, please contact the WooCommerce Software Add-on plugin developers or check their documentation.
 
 - 100: Invalid Request
 - 100: An undisclosed error occurred
