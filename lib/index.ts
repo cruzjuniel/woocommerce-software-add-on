@@ -170,15 +170,14 @@ export class WooCommerceSoftwareAddOn {
     }
 
     // activation: https://woocommerce.com/document/software-add-on/#section-11
-    async activateLicense(license_key: string, instance: string | null = null, platform: string | null = null, secret_key: string | null = null): Promise<WooCommerceSoftwareResult> {
+    async activateLicense(license_key: string, instance: string | null = null, platform: string | null = null): Promise<WooCommerceSoftwareResult> {
         if (this.email == null) return noEmailError;
         return await this.getRequest("activation", {
             email: this.email,
             license_key: license_key,
             product_id: this.product_id,
             instance: instance,
-            platform: platform != null ? platform : systemInfo,
-            secret_key: secret_key
+            platform: platform != null ? platform : systemInfo
         });
     }
 
