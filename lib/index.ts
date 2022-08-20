@@ -1,4 +1,5 @@
 
+import os = require("os");
 import https = require('https');
 import {
     WooCommerceSoftwareResult,
@@ -6,6 +7,12 @@ import {
     WooCommerceSoftwareActivations,
     WooCommerceSoftwareApiError
 } from "./types";
+
+const systemInfo = `${os.hostname()} (${os.platform()}) ${os.cpus().map(cpu => {
+    return cpu.model;
+}).filter((cpu, index, self) => {
+    return self.indexOf(cpu) === index;
+})}`;
 
 const noEmailError: WooCommerceSoftwareResult = {
     success: false,
@@ -58,7 +65,7 @@ async function getRequest(hostname: string, request: string, args: { [key: strin
                             error: e
                         });
                     }
-                    
+
                     let err = (json as WooCommerceSoftwareApiError);
 
                     if (err.error !== undefined) {
@@ -120,7 +127,7 @@ export async function generateKey(hostname: string, product_id: string, email: s
 }
 
 // check: https://woocommerce.com/document/software-add-on/#section-14
-export async function checkLicense(hostname: string, product_id: string, email: string, license_key: string, timestamp: string | number = 0, platform: string = ""): Promise<WooCommerceSoftwareResult> {
+export async function checkLicense(hostname: string, product_id: string, email: string, license_key: string, timestamp: string | number = 0, platform: string | null = null): Promise<WooCommerceSoftwareResult> {
     let result: WooCommerceSoftwareResult = await getRequest(hostname, "check", {
         email: email,
         license_key: license_key,
@@ -128,16 +135,17 @@ export async function checkLicense(hostname: string, product_id: string, email: 
     });
     if (result.success) {
         let activations: Array<WooCommerceSoftwareActivations> = (result.output as WooCommerceSoftwareCheckSuccess).activations;
+        let checkPlatform = platform != null ? platform : systemInfo;
         if (activations.length == 0) {
             result.success = false;
             result.error = "Software key is not yet activated";
         } else if (activations.find(activation => {
             // if timestamp is 0 (no timestamp was provided), instance is ignored
-            // if platform is empty string (no platform was provided), activation_platform is ignored
-            return (timestamp == 0 || activation.instance == String(timestamp)) && (platform == "" || platform == activation.activation_platform);
+            // if activation_platform is empty string (no platform was recorded for the activation), platform is ignored
+            return (timestamp == 0 || activation.instance == String(timestamp)) && ((activation.activation_platform == "") || (checkPlatform == activation.activation_platform));
         }) === undefined) {
             result.success = false;
-            result.error = `No matching timestamp '${timestamp}' and/or platform '${platform}'`;
+            result.error = `No matching timestamp '${timestamp}' and/or platform '${checkPlatform}'`;
         }
     }
     return result;
@@ -169,7 +177,7 @@ export class WooCommerceSoftwareAddOn {
             license_key: license_key,
             product_id: this.product_id,
             instance: instance,
-            platform: platform,
+            platform: platform != null ? platform : systemInfo,
             secret_key: secret_key
         });
     }
@@ -197,9 +205,18 @@ export class WooCommerceSoftwareAddOn {
     }
 
     // check: https://woocommerce.com/document/software-add-on/#section-14
-    async checkLicense(license_key: string, timestamp: string | number = 0, platform: string = ""): Promise<WooCommerceSoftwareResult> {
+    async checkLicense(license_key: string, timestamp: string | number = 0, platform: string | null = null): Promise<WooCommerceSoftwareResult> {
         if (this.email == null) return noEmailError;
-        return checkLicense(this.hostname, this.product_id, this.email, license_key, timestamp, platform);
+        return checkLicense(this.hostname, this.product_id, this.email, license_key, timestamp, platform != null ? platform : systemInfo);
+    }
+
+    // check: https://woocommerce.com/document/software-add-on/#section-14
+    async getActivations(license_key: string): Promise<Array<WooCommerceSoftwareActivations> | null> {
+        if (this.email == null) return null;
+        return await checkLicense(this.hostname, this.product_id, this.email, license_key, "", "").then(value => {
+            if (value.success) return (value.output as WooCommerceSoftwareCheckSuccess).activations;
+            return null;
+        });
     }
 
     private async getRequest(request: string, args: { [key: string]: string | null }): Promise<WooCommerceSoftwareResult> {
