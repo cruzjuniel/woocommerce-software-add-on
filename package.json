@@ -1,6 +1,6 @@
 {
   "name": "woocommerce-software-add-on",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "A simple implementation of WooCommerce's Software Add-on API",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
