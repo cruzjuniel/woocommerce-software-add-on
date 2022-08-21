@@ -2,11 +2,16 @@
   "name": "woocommerce-software-add-on",
   "version": "0.1.1",
   "description": "A simple implementation of WooCommerce's Software Add-on API",
+  "homepage": "https://github.com/cruzjuniel/woocommerce-software-add-on#readme",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "repository": {
     "type": "git",
     "url": "https://github.com/cruzjuniel/woocommerce-software-add-on.git"
+  },
+  "bugs": {
+    "url" : "https://github.com/cruzjuniel/woocommerce-software-add-on/issues",
+    "email" : "cruz.juniel@gmail.com"
   },
   "scripts": {
     "prepublish": "npm run build",
@@ -14,7 +19,11 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": ["wordpress", "woocommerce", "software", "addon", "add-on", "license"],
-  "author": "Juniel Cruz",
+  "author": {
+    "name": "Juniel Cruz",
+    "email": "cruz.juniel@gmail.com",
+    "url": "https://github.com/cruzjuniel"
+  },
   "license": "ISC",
   "devDependencies": {
     "@types/node": "^18.7.3",
