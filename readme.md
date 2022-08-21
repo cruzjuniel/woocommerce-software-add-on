@@ -47,6 +47,8 @@ This can be used to generate a new keys. This is based on the `generate_key` API
 | key_prefix    | Optional prefix for generated license keys, default: null                                |
 | activations   | Amount of activations possible per license key, default: 1                               |
 
+Return: [`Promise<WooCommerceSoftwareResult>`](#woocommercesoftwareresult)
+
 
 ### `activateLicense`
 
@@ -58,6 +60,8 @@ This can be used to activate a single instance of a license key. This is based o
 | instance      | Pass to activate existing uses (previously deactivated), default: null, ignored          |
 | platform      | Optional platform information that can be used to identify unique systems, default: null |
 
+Return: [`Promise<WooCommerceSoftwareResult>`](#woocommercesoftwareresult)
+
 
 ### `resetLicense`
 
@@ -66,6 +70,8 @@ This can be used to reset/deactivate all activations of a license key. This is b
 | Argument      | Description                                                                              |
 |:-------------:|:---------------------------------------------------------------------------------------- |
 | license_key   | License key to reset all activations                                                     |
+
+Return: [`Promise<WooCommerceSoftwareResult>`](#woocommercesoftwareresult)
 
 
 ### `deactivateLicense`
@@ -80,6 +86,8 @@ This can be used to deactivate a single activations of a license key. This is ba
 
 If both `instance` and `license_key` are `null` (or not provided), this will deactivate the oldest activation of the license key.
 
+Return: [`Promise<WooCommerceSoftwareResult>`](#woocommercesoftwareresult)
+
 
 ### `checkLicense`
 
@@ -91,6 +99,8 @@ This can be used to check the activation status of a license key. This is based 
 | timestamp     | Pass to check the timestamp of the activation, default: 0, ignored                       |
 | platform      | Pass to check the platform used during activation,.default: null, auto-generated info    |
 
+Return: [`Promise<WooCommerceSoftwareResult>`](#woocommercesoftwareresult)
+
 
 ### `getActivations`
 
@@ -101,6 +111,7 @@ This can be used to list the existing activations of a license key. This is base
 |:-------------:|:---------------------------------------------------------------------------------------- |
 | license_key   | License key to check for activations                                                     |
 
+Return: [`Promise<Array<WooCommerceSoftwareActivations> | null>`](#woocommercesoftwareactivations)
 
 ## Usage Example
 
@@ -159,6 +170,10 @@ Some methods are also exported so it is usable without the need to create a `Woo
 | key_prefix    | Optional prefix for generated license keys, default: null                                |
 | activations   | Amount of activations possible per license key, default: 1                               |
 
+Return: [`Promise<WooCommerceSoftwareResult>`](#woocommercesoftwareresult)
+
+Example
+
 ``` javascript
 const { generateKey } = require("woocommerce-software-add-on");
 
@@ -187,6 +202,10 @@ const { generateKey } = require("woocommerce-software-add-on");
 | timestamp     | Pass to check the timestamp of the activation, default: 0, ignored                       |
 | platform      | Pass to check the platform used during activation,.default: null, auto-generated info    |
 
+Return: [`Promise<WooCommerceSoftwareResult>`](#woocommercesoftwareresult)
+
+Example
+
 ``` javascript
 const { checkLicense } = require("woocommerce-software-add-on");
 
@@ -200,3 +219,30 @@ const { checkLicense } = require("woocommerce-software-add-on");
 
 })();
 ```
+
+## Interface Types
+
+### `WooCommerceSoftwareResult`
+
+Most methods/functions from the module can returns a Promise of this type. This interface type is an object with the following keys:
+
+| Key           | Description                                                                              |
+|:-------------:|:---------------------------------------------------------------------------------------- |
+| success       | Indicates whethere the operation was a success or not                                    |
+| code          | HTTP code or API error code                                                              |
+| headers       | HTTP headers response received to the API request                                        |
+| output        | Actual JSON response to the API request, if API call received a proper API response      |
+| error         | Error that occurred during the API request or as indicated by the API response           |
+
+
+### `WooCommerceSoftwareActivations`
+
+The [`getActivations`](#getactivations) returns a promise of an array of this type when used. This type is also contained withing the response to [`checkLicense`](#checklicense). This type is an object with the following keys:
+
+| Key                 | Description                                                                        |
+|:-------------------:|:---------------------------------------------------------------------------------- |
+| activation_id       | ID associated with the activation                                                  |
+| instance            | Usually a timestamp of the activation, or as indicated during activation           |
+| activation_platform | As indicated during activation                                                     |
+| activation_time     | Actual JSON response to the API request if API call received a proper API response |
+
