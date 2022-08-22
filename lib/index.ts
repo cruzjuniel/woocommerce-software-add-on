@@ -1,6 +1,7 @@
 
-import os = require("os");
-import https = require('https');
+import os from 'os';
+import https from 'https';
+import { machineIdSync } from 'node-machine-id';
 import {
     WooCommerceSoftwareResult,
     WooCommerceSoftwareCheckSuccess,
@@ -12,7 +13,7 @@ const systemInfo = `${os.hostname()} (${os.platform()}) ${os.cpus().map(cpu => {
     return cpu.model;
 }).filter((cpu, index, self) => {
     return self.indexOf(cpu) === index;
-})}`;
+})} (${machineIdSync()})`;
 
 const noEmailError: WooCommerceSoftwareResult = {
     success: false,
