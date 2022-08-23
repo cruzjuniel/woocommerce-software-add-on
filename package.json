@@ -1,6 +1,6 @@
 {
   "name": "woocommerce-software-add-on",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "A simple implementation of WooCommerce's Software Add-on API",
   "homepage": "https://github.com/cruzjuniel/woocommerce-software-add-on#readme",
   "main": "dist/index.js",
