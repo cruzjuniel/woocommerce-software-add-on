@@ -33,6 +33,15 @@ Optionally, an email can also be specified:
 
 These methods are available for use after the class `WooCommerceSoftwareAddOn` is initialized.
 
+### `setEmail`
+
+This can be used to replace the email used for the API requests.
+
+| Argument      | Description                                                                              |
+|:-------------:|:---------------------------------------------------------------------------------------- |
+| email         | Email to replace the current default email set during [initialization](#initialization)  |
+
+Return: void
 
 ### `generateKey`
 
