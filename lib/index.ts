@@ -30,7 +30,7 @@ const noEmailError: WooCommerceSoftwareResult = {
  * @param args Key-value containing the required and optional parameters for the request
  * @returns Promise<WooCommerceSoftwareResult>
  */
-async function getRequest(hostname: string, request: string, args: { [key: string]: string | null }): Promise<WooCommerceSoftwareResult> {
+async function getRequest(hostname: string, request: string, args: { [key: string]: string | null }, allowInsecure: boolean = false): Promise<WooCommerceSoftwareResult> {
     let requestPath: string = "/woocommerce/?";
     let searchParams: URLSearchParams = new URLSearchParams(`wc-api=software-api&request=${request}`);
 
@@ -43,9 +43,13 @@ async function getRequest(hostname: string, request: string, args: { [key: strin
     requestPath += searchParams.toString();
 
     return await new Promise<WooCommerceSoftwareResult>(resolve => {
+
         https.get({
             hostname: hostname,
-            path: requestPath
+            path: requestPath,
+            agent: allowInsecure ? new https.Agent({
+                rejectUnauthorized: false
+            }) : https.globalAgent
         }, (res) => {
 
             if (res.statusCode !== undefined && res.statusCode == 200) {
@@ -133,7 +137,7 @@ async function getRequest(hostname: string, request: string, args: { [key: strin
  * @param activations Number of activations allowable for the license key, default: 1
  * @returns Promise<WooCommerceSoftwareResult>
  */
-export async function generateKey(hostname: string, product_id: string, email: string, secret_key: string, order_id: string | null = null, version: string | null = null, key_prefix: string | null = null, activations: number = 1): Promise<WooCommerceSoftwareResult> {
+export async function generateKey(hostname: string, product_id: string, email: string, secret_key: string, order_id: string | null = null, version: string | null = null, key_prefix: string | null = null, activations: number = 1, allowInsecure: boolean = false): Promise<WooCommerceSoftwareResult> {
     return await getRequest(hostname, "generate_key", {
         secret_key: secret_key,
         email: email,
@@ -142,7 +146,7 @@ export async function generateKey(hostname: string, product_id: string, email: s
         version: version,
         key_prefix: key_prefix,
         activations: String(activations)
-    });
+    }, allowInsecure);
 }
 
 /**
@@ -155,12 +159,12 @@ export async function generateKey(hostname: string, product_id: string, email: s
  * @param platform The platform that is tied to the license activation, default: null (_ignored_)
  * @returns Promise<WooCommerceSoftwareResult>
  */
-export async function checkLicense(hostname: string, product_id: string, email: string, license_key: string, timestamp: string | number = 0, platform: string | null = null): Promise<WooCommerceSoftwareResult> {
+export async function checkLicense(hostname: string, product_id: string, email: string, license_key: string, timestamp: string | number = 0, platform: string | null = null, allowInsecure: boolean = false): Promise<WooCommerceSoftwareResult> {
     let result: WooCommerceSoftwareResult = await getRequest(hostname, "check", {
         email: email,
         license_key: license_key,
         product_id: product_id
-    });
+    }, allowInsecure);
     if (result.success) {
         let activations: Array<WooCommerceSoftwareActivations> = (result.output as WooCommerceSoftwareCheckSuccess).activations;
         let checkPlatform = platform != null ? platform : systemInfo;
@@ -183,6 +187,7 @@ export class WooCommerceSoftwareAddOn {
     private hostname: string;
     private product_id: string;
     private email: string | null;
+    private allowInsecure: boolean;
 
     /**
      * WooCommerceSoftwareAddOn Constructor
@@ -190,10 +195,11 @@ export class WooCommerceSoftwareAddOn {
      * @param product_id The product ID representing the software product
      * @param email The user email to use for the API requests, default: null
      */
-    constructor(hostname: string, product_id: string, email: string | null = null) {
+    constructor(hostname: string, product_id: string, email: string | null = null, allowInsecure: boolean = false) {
         this.hostname = hostname;
         this.product_id = product_id;
         this.email = email;
+        this.allowInsecure = allowInsecure;
     }
 
     /**
@@ -217,7 +223,7 @@ export class WooCommerceSoftwareAddOn {
     async generateKey(secret_key: string, email: string | null = null, order_id: string | null = null, version: string | null = null, key_prefix: string | null = null, activations: number = 1): Promise<WooCommerceSoftwareResult> {
         let _email: string | null = email != null ? email : this.email;
         if (_email == null) return noEmailError;
-        return generateKey(this.hostname, this.product_id, _email, secret_key, order_id, version, key_prefix, activations);
+        return generateKey(this.hostname, this.product_id, _email, secret_key, order_id, version, key_prefix, activations, this.allowInsecure);
     }
 
     /**
@@ -279,7 +285,7 @@ export class WooCommerceSoftwareAddOn {
      */
     async checkLicense(license_key: string, timestamp: string | number = 0, platform: string | null = null): Promise<WooCommerceSoftwareResult> {
         if (this.email == null) return noEmailError;
-        return checkLicense(this.hostname, this.product_id, this.email, license_key, timestamp, platform != null ? platform : systemInfo);
+        return checkLicense(this.hostname, this.product_id, this.email, license_key, timestamp, platform != null ? platform : systemInfo, this.allowInsecure);
     }
 
     /**
@@ -295,7 +301,7 @@ export class WooCommerceSoftwareAddOn {
      */
     async getActivations(license_key: string): Promise<Array<WooCommerceSoftwareActivations> | null | undefined> {
         if (this.email == null) return undefined;
-        return await checkLicense(this.hostname, this.product_id, this.email, license_key, "", "").then(value => {
+        return await checkLicense(this.hostname, this.product_id, this.email, license_key, "", "", this.allowInsecure).then(value => {
             if (value.success) return (value.output as WooCommerceSoftwareCheckSuccess).activations;
             return null;
         });
@@ -308,6 +314,6 @@ export class WooCommerceSoftwareAddOn {
      * @returns Promise<WooCommerceSoftwareResult>
      */
     private async getRequest(request: string, args: { [key: string]: string | null }): Promise<WooCommerceSoftwareResult> {
-        return getRequest(this.hostname, request, args);
+        return getRequest(this.hostname, request, args, this.allowInsecure);
     }
 }

@@ -28,6 +28,12 @@ Optionally, an email can also be specified:
 
     let licenseManager = new WooCommerceSoftwareAddOn("example.com", "example", "example@example.com");
 
+Additional option to allow insecure connections is also provided and is disabled by default. This can be used to handle errors from expired SSL certificates.
+
+    let licenseManager = new WooCommerceSoftwareAddOn("example.com", "example", "example@example.com", true);
+
+**WARNING:** It is not recommended to allow insecure connections. Alternatively, the SSL certificate needs to be checked and renewed as necessary.
+
 
 ## WooCommerceSoftwareAddOn Methods
 
@@ -180,6 +186,7 @@ Some methods are also exported so it is usable without the need to create a `Woo
 | version       | Optional version information of the software license, default: null                      |
 | key_prefix    | Optional prefix for generated license keys, default: null                                |
 | activations   | Amount of activations possible per license key, default: 1                               |
+| allowInsecure | Indicates whether to allow insecure connections (expired SSL certificates)               |
 
 Return: [`Promise<WooCommerceSoftwareResult>`](#woocommercesoftwareresult)
 
@@ -212,6 +219,7 @@ const { generateKey } = require("woocommerce-software-add-on");
 | license_key   | License key to validate a single activation                                              |
 | timestamp     | Pass to check the timestamp of the activation, default: 0, ignored                       |
 | platform      | Pass to check the platform used during activation,.default: null, auto-generated info    |
+| allowInsecure | Indicates whether to allow insecure connections (expired SSL certificates)               |
 
 Return: [`Promise<WooCommerceSoftwareResult>`](#woocommercesoftwareresult)
 
